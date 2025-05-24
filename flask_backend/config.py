@@ -24,7 +24,8 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///securenet_dev.db'
+    # Use PostgreSQL database URL from environment if available
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///securenet_dev.db')
     JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
     CORS_ORIGINS = ["http://localhost:5000", "http://127.0.0.1:5000"]
 
