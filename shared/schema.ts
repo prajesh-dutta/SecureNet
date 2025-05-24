@@ -8,7 +8,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull().default("user"),
-  email: text("email"),
+  email: text("email").notNull().unique(),
   lastLogin: timestamp("last_login"),
 });
 
@@ -17,6 +17,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   role: true,
   email: true,
+  lastLogin: true,
 });
 
 // Security events
