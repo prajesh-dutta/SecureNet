@@ -72,7 +72,7 @@
 
 @layer components {
   .glass-effect {
-    @apply bg-background-tertiary/40 backdrop-blur-md border border-white/8;
+    @apply bg-black/30 backdrop-blur-md border border-gray-800;
   }
   
   .ping-animation {
@@ -80,15 +80,15 @@
   }
   
   .threat-indicator-low {
-    @apply bg-accent-secondary;
+    @apply bg-green-500;
   }
   
   .threat-indicator-medium {
-    @apply bg-accent-warning;
+    @apply bg-yellow-500;
   }
   
   .threat-indicator-high {
-    @apply bg-accent-danger;
+    @apply bg-red-500;
   }
   
   .sidebar-icon {
@@ -96,14 +96,15 @@
   }
   
   .sidebar-icon:hover {
-    @apply bg-accent-primary/20 -translate-y-0.5;
+    @apply bg-blue-500/20 -translate-y-0.5;
   }
   
   .active-sidebar-icon {
-    @apply bg-accent-primary/20 border-l-2 border-accent-primary;
+    @apply bg-blue-500/20 border-l-2 border-blue-500;
   }
   
   .active-tab {
-    @apply border-b-2 border-accent-primary text-text-primary;
+    @apply border-b-2 border-blue-500 text-white;
   }
+}
 }
