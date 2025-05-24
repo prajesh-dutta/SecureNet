@@ -1,0 +1,155 @@
+Create a comprehensive Flask backend for the SecureNet cybersecurity dashboard with the following specifications:
+
+PROJECT BACKEND REQUIREMENTS:
+Build a production-ready Flask REST API that integrates multiple free cybersecurity APIs and provides real-time threat intelligence data to the frontend dashboard.
+
+FLASK APPLICATION STRUCTURE:
+Create a modular Flask application with the following structure:
+- app.py (main application file)
+- config.py (configuration management)
+- models/ (database models)
+- routes/ (API endpoints organized by modules)
+- services/ (external API integration services)
+- utils/ (helper functions and utilities)
+- requirements.txt (dependencies)
+
+CORE DEPENDENCIES TO INSTALL:
+- Flask==2.3.3
+- Flask-JWT-Extended==4.5.3
+- Flask-CORS==4.0.0
+- Flask-Limiter==3.5.0
+- requests==2.31.0
+- python-dotenv==1.0.0
+- APScheduler==3.10.4
+- SQLAlchemy==2.0.23
+- Flask-SQLAlchemy==3.1.1
+
+CYBERSECURITY API INTEGRATIONS:
+Integrate these FREE cybersecurity APIs with proper error handling:
+
+1. **VirusTotal API** (Free tier: 1000 requests/day)
+   - Endpoint: /api/threats/scan-url
+   - Endpoint: /api/threats/scan-file-hash
+   - Service: services/virustotal_service.py
+
+2. **Shodan API** (Free tier: 100 queries/month)
+   - Endpoint: /api/network/host-info
+   - Endpoint: /api/network/search-vulnerabilities
+   - Service: services/shodan_service.py
+
+3. **PhishTank API** (Free with registration)
+   - Endpoint: /api/threats/check-phishing
+   - Service: services/phishtank_service.py
+
+4. **AlienVault OTX API** (Free with registration)
+   - Endpoint: /api/threats/indicators
+   - Endpoint: /api/threats/pulse-data
+   - Service: services/alienvault_service.py
+
+5. **Google Safe Browsing API** (Free tier: 10,000 requests/day)
+   - Endpoint: /api/threats/safe-browsing
+   - Service: services/google_safebrowsing_service.py
+
+6. **GreyNoise API** (Free tier: 1000 queries/month)
+   - Endpoint: /api/network/noise-analysis
+   - Service: services/greynoise_service.py
+
+7. **URLScan.io API** (Free with rate limits)
+   - Endpoint: /api/threats/url-analysis
+   - Service: services/urlscan_service.py
+
+8. **SecurityTrails API** (Free tier: 50 queries/month)
+   - Endpoint: /api/network/dns-history
+   - Service: services/securitytrails_service.py
+
+API ENDPOINTS TO CREATE:
+Authentication:
+- POST /api/auth/login
+- POST /api/auth/logout
+- POST /api/auth/refresh
+
+Dashboard Data:
+- GET /api/dashboard/metrics (real-time system metrics)
+- GET /api/dashboard/summary (threat summary statistics)
+
+Threat Intelligence:
+- POST /api/threats/analyze-url (multi-API URL analysis)
+- POST /api/threats/analyze-ip (IP reputation check)
+- POST /api/threats/analyze-hash (file hash analysis)
+- GET /api/threats/recent (recent threat detections)
+
+Network Monitoring:
+- GET /api/network/traffic (simulated network traffic data)
+- GET /api/network/topology (network topology data)
+- POST /api/network/scan-host (host vulnerability scan)
+
+Vulnerability Management:
+- GET /api/vulnerabilities/scan-results
+- POST /api/vulnerabilities/start-scan
+- GET /api/vulnerabilities/cve-lookup
+
+Security Logs:
+- GET /api/logs/security-events
+- GET /api/logs/audit-trail
+
+SECURITY IMPLEMENTATION:
+- JWT authentication with secure secret keys
+- Rate limiting: 100 requests per minute per IP
+- Input validation and sanitization for all endpoints
+- CORS configuration for frontend domain only
+- Secure headers (HSTS, CSP, X-Frame-Options)
+- API key management for external services
+- Request/response logging for audit trails
+
+MOCK DATA GENERATION:
+Create realistic mock data generators for:
+- Network traffic simulation
+- Security event logs
+- System performance metrics
+- Threat detection alerts
+- Vulnerability scan results
+
+BACKGROUND TASKS:
+Implement scheduled tasks using APScheduler:
+- Periodic threat intelligence updates (every 30 minutes)
+- System health checks (every 5 minutes)
+- Log rotation and cleanup (daily)
+- API quota monitoring (hourly)
+
+DATABASE SCHEMA:
+Create SQLite database with tables:
+- users (authentication)
+- threat_detections (threat analysis results)
+- security_events (security logs)
+- scan_results (vulnerability scan data)
+- api_usage (external API usage tracking)
+
+ERROR HANDLING:
+- Global error handlers for 400, 401, 403, 404, 500 errors
+- API timeout handling with fallback responses
+- Graceful degradation when external APIs are unavailable
+- Comprehensive logging with different log levels
+
+CONFIGURATION MANAGEMENT:
+- Environment variables for API keys
+- Separate configs for development/production
+- Rate limiting configuration
+- Database connection settings
+
+REAL-TIME FEATURES:
+- WebSocket support for real-time dashboard updates
+- Server-sent events for live threat alerts
+- Background monitoring with periodic data refresh
+
+API DOCUMENTATION:
+- Generate OpenAPI/Swagger documentation
+- Include example requests/responses
+- Document rate limits and authentication requirements
+
+DEPLOYMENT CONFIGURATION:
+- Gunicorn WSGI server configuration
+- Environment variable templates
+- Health check endpoints for monitoring
+- Dockerfile for containerization
+
+Make this a production-ready cybersecurity backend that can handle real threat intelligence data while gracefully managing API rate limits and providing comprehensive security monitoring capabilities.
