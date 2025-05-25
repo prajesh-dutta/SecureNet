@@ -10,13 +10,18 @@ import ThreatLevelGauge from '@/components/dashboard/threat-level-gauge';
 import GeographicThreatMap from '@/components/dashboard/geographic-threat-map';
 import SystemStatusCard from '@/components/dashboard/system-status-card';
 import ActiveAlertsCard from '@/components/dashboard/active-alerts-card';
+import RealTimeSystemMetrics from '@/components/dashboard/real-time-system-metrics';
 import { RealtimeSOCDashboard } from '@/components/dashboard/realtime-soc-dashboard-enhanced';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle, Computer, Shield, BarChart2, Activity, Zap } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Get real-time data from WebSocket
+  const { systemMetrics, connected } = useSocket();
   
   const { data: overviewStats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-overview'],
@@ -27,7 +32,16 @@ export default function Dashboard() {
         apiClient.getRecentThreats(50)
       ]);
       
-      // Calculate stats from real data
+      // Calculate stats from real data, prioritize WebSocket data if available
+      const realTimeMetrics = systemMetrics ? {
+        cpu_usage: systemMetrics.cpu_usage,
+        memory_usage: systemMetrics.memory_usage,
+        disk_usage: systemMetrics.disk_usage,
+        network_throughput: (systemMetrics.network_stats?.bytes_sent || 0) + (systemMetrics.network_stats?.bytes_recv || 0),
+        active_connections: systemMetrics.network_stats?.connections || 0,
+        uptime: systemMetrics.uptime
+      } : metrics;
+      
       const activeThreats = threats.filter(t => t.status === 'active').length;
       const criticalThreats = threats.filter(t => t.severity === 'critical').length;
       const blockedAttacks = threats.filter(t => t.status === 'resolved').length;
@@ -35,12 +49,13 @@ export default function Dashboard() {
       return {
         activeThreats,
         criticalThreats,
-        protectedSystems: Math.round(100 - (metrics.cpu_usage + metrics.memory_usage) / 2),
-        networkTraffic: `${(metrics.network_throughput / 1024).toFixed(1)} TB`,
-        blockedAttacks
+        protectedSystems: Math.round(100 - (realTimeMetrics.cpu_usage + realTimeMetrics.memory_usage) / 2),
+        networkTraffic: `${(realTimeMetrics.network_throughput / (1024 * 1024 * 1024)).toFixed(1)} GB`,
+        blockedAttacks,
+        realTimeData: connected && systemMetrics?.real_time_data
       };
     },
-    refetchInterval: 30000
+    refetchInterval: connected ? 10000 : 5000 // Reduce polling when WebSocket is connected
   });
 
   return (
@@ -48,9 +63,17 @@ export default function Dashboard() {
       {/* Dashboard Mode Selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Security Operations Center</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">Security Operations Center</h1>
+            {connected && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Live Data
+              </span>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Real-time threat monitoring and network security dashboard
+            {overviewStats?.realTimeData && " • Live system metrics active"}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -148,6 +171,7 @@ export default function Dashboard() {
             
             {/* Right Column */}
             <div className="space-y-6">
+              <RealTimeSystemMetrics />
               <ThreatLevelGauge />
               <GeographicThreatMap />
               <SystemStatusCard />

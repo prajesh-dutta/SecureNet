@@ -10,6 +10,7 @@ import Vulnerabilities from "@/pages/vulnerabilities";
 import Firewall from "@/pages/firewall";
 import SystemHealth from "@/pages/system-health";
 import Logs from "@/pages/logs";
+import WebSocketTest from "@/pages/websocket-test";
 import MainLayout from "@/components/layout/main-layout";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/firewall" component={Firewall} />
         <Route path="/system-health" component={SystemHealth} />
         <Route path="/logs" component={Logs} />
+        <Route path="/websocket-test" component={WebSocketTest} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
