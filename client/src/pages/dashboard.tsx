@@ -8,7 +8,7 @@ import SecurityEventsTable from '@/components/dashboard/security-events-table';
 import NetworkTopology from '@/components/dashboard/network-topology';
 import ThreatLevelGauge from '@/components/dashboard/threat-level-gauge';
 import GeographicThreatMap from '@/components/dashboard/geographic-threat-map';
-import SystemStatusCard from '@/components/dashboard/system-status-card';
+import SystemStatusCard from '@/components/dashboard/system-status-card-fixed';
 import ActiveAlertsCard from '@/components/dashboard/active-alerts-card';
 import RealTimeSystemMetrics from '@/components/dashboard/real-time-system-metrics';
 import { RealtimeSOCDashboard } from '@/components/dashboard/realtime-soc-dashboard-enhanced';

@@ -77,12 +77,11 @@ export default function IDS() {
   const [selectedSeverity, setSelectedSeverity] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
-  const [editingRule, setEditingRule] = useState<DetectionRule | null>(null);
-  const [newRule, setNewRule] = useState({
+  const [editingRule, setEditingRule] = useState<DetectionRule | null>(null);  const [newRule, setNewRule] = useState({
     name: '',
     description: '',
     pattern: '',
-    severity: 'Medium' as const,
+    severity: 'Medium' as 'Critical' | 'High' | 'Medium' | 'Low',
     enabled: true
   });
 
@@ -153,9 +152,8 @@ export default function IDS() {
       alert.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alert.source_ip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alert.event_type?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSeverity = !selectedSeverity || alert.severity === selectedSeverity;
-    const matchesStatus = !selectedStatus || alert.status === selectedStatus;
+      const matchesSeverity = !selectedSeverity || selectedSeverity === 'all' || alert.severity === selectedSeverity;
+    const matchesStatus = !selectedStatus || selectedStatus === 'all' || alert.status === selectedStatus;
     
     return matchesSearch && matchesSeverity && matchesStatus;
   });
@@ -318,9 +316,8 @@ export default function IDS() {
                 <Select value={selectedSeverity} onValueChange={setSelectedSeverity}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="All Severities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Severities</SelectItem>
+                  </SelectTrigger>                  <SelectContent>
+                    <SelectItem value="all">All Severities</SelectItem>
                     <SelectItem value="Critical">Critical</SelectItem>
                     <SelectItem value="High">High</SelectItem>
                     <SelectItem value="Medium">Medium</SelectItem>
@@ -330,9 +327,8 @@ export default function IDS() {
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                  </SelectTrigger>                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="Active">Active</SelectItem>
                     <SelectItem value="Investigating">Investigating</SelectItem>
                     <SelectItem value="Resolved">Resolved</SelectItem>

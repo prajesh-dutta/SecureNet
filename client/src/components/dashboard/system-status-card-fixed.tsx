@@ -8,7 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { apiClient } from '@/lib/api-client';
 
 interface SystemStatus {
   overallStatus: 'Healthy' | 'Degraded' | 'Critical';
@@ -20,52 +19,71 @@ interface SystemStatus {
 }
 
 export default function SystemStatusCard() {
-  const { data, isLoading, isError, refetch } = useQuery<SystemStatus>({
-    queryKey: ['system-status-card'],
+  const { data, isLoading, isError, error, refetch } = useQuery<SystemStatus>({
+    queryKey: ['system-metrics-fixed'],
     queryFn: async () => {
-      console.log('🔍 SystemStatusCard: Starting API call...');
+      console.log('🔍 SystemStatusCard: Making direct fetch call...');
+      
       try {
-        const metrics = await apiClient.getSystemMetrics();
-        console.log('✅ SystemStatusCard: API call successful:', metrics);
+        const response = await fetch('http://localhost:5001/api/dashboard/metrics', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const metrics = await response.json();
+        console.log('✅ SystemStatusCard: API response received:', metrics);
         
-        // Transform SystemMetrics to SystemStatus format
+        // Transform to SystemStatus format
         const overallHealth = (metrics.cpu_usage + metrics.memory_usage + metrics.disk_usage) / 3;
         let overallStatus: 'Healthy' | 'Degraded' | 'Critical' = 'Healthy';
         
         if (overallHealth > 80) overallStatus = 'Critical';
         else if (overallHealth > 60) overallStatus = 'Degraded';
         
-        return {
+        const result = {
           overallStatus,
           systems: [
             {
               name: 'IDS Engine',
-              status: metrics.cpu_usage > 80 ? 'Degraded' : 'Online',
-              health: 100 - metrics.cpu_usage
+              status: (metrics.cpu_usage > 80 ? 'Degraded' : 'Online') as 'Online' | 'Degraded' | 'Offline',
+              health: Math.max(0, Math.round(100 - metrics.cpu_usage))
             },
             {
               name: 'Threat Intelligence',
-              status: 'Online',
+              status: 'Online' as const,
               health: 95
             },
             {
               name: 'Network Monitor',
-              status: metrics.memory_usage > 80 ? 'Degraded' : 'Online',
-              health: 100 - metrics.memory_usage
+              status: (metrics.memory_usage > 80 ? 'Degraded' : 'Online') as 'Online' | 'Degraded' | 'Offline',
+              health: Math.max(0, Math.round(100 - metrics.memory_usage))
             },
             {
               name: 'Log Analysis',
-              status: metrics.disk_usage > 90 ? 'Degraded' : 'Online',
-              health: 100 - metrics.disk_usage
+              status: (metrics.disk_usage > 90 ? 'Degraded' : 'Online') as 'Online' | 'Degraded' | 'Offline',
+              health: Math.max(0, Math.round(100 - metrics.disk_usage))
             }
           ]
         };
-      } catch (error) {
-        console.error('❌ SystemStatusCard: API call failed:', error);
-        throw error;
+        
+        console.log('✅ SystemStatusCard: Transformed data:', result);
+        return result;
+        
+      } catch (err) {
+        console.error('❌ SystemStatusCard: Error occurred:', err);
+        throw err;
       }
     },
-    refetchInterval: 60000
+    refetchInterval: 30000,
+    retry: 2,
+    retryDelay: 1000
   });
 
   const getStatusColor = (status: string) => {
@@ -108,7 +126,6 @@ export default function SystemStatusCard() {
             <Skeleton className="h-6 w-full bg-background-tertiary/40" />
             <Skeleton className="h-6 w-full bg-background-tertiary/40" />
             <Skeleton className="h-6 w-full bg-background-tertiary/40" />
-            <Skeleton className="h-6 w-full bg-background-tertiary/40" />
           </div>
         </CardContent>
       </Card>
@@ -130,8 +147,21 @@ export default function SystemStatusCard() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="h-40 flex items-center justify-center">
+          <div className="h-40 flex flex-col items-center justify-center space-y-2">
             <p className="text-text-secondary">Failed to load system status data</p>
+            {error && (
+              <p className="text-xs text-red-400">
+                {error instanceof Error ? error.message : 'Unknown error'}
+              </p>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => refetch()}
+              className="text-xs"
+            >
+              Retry
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -158,7 +188,7 @@ export default function SystemStatusCard() {
               </div>
               <div className="w-full h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                 <div 
-                  className={`h-full ${getHealthColor(system.status)} rounded-full`} 
+                  className={`h-full ${getHealthColor(system.status)} rounded-full transition-all duration-300`} 
                   style={{ width: `${system.health}%` }}
                 ></div>
               </div>

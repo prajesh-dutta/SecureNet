@@ -110,37 +110,82 @@ export default function NetworkTopology() {
           ref={containerRef}
           className="h-80 w-full bg-background-primary rounded relative overflow-hidden"
         >
-          {/* Interactive network topology visualization */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-20 h-20 border-2 border-accent-primary rounded-full flex items-center justify-center relative">
-              <span className="absolute w-full h-full rounded-full bg-accent-primary opacity-10 ping-animation"></span>
-              <div className="w-16 h-16 bg-background-tertiary rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-primary">
-                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                  <line x1="6" y1="10" x2="6" y2="14"></line>
-                  <line x1="12" y1="10" x2="12" y2="14"></line>
-                  <line x1="18" y1="10" x2="18" y2="14"></line>
-                </svg>
-              </div>
+          {/* Network topology visualization using real data */}
+          <div className="absolute inset-4">
+            {/* Display nodes */}
+            {data.nodes?.map((node: any, index: number) => {
+              const x = 50 + (index % 3) * 120; // Arrange in grid
+              const y = 40 + Math.floor(index / 3) * 80;
+              const statusColor = 
+                node.status === 'healthy' ? 'border-accent-secondary' :
+                node.status === 'warning' ? 'border-accent-warning' :
+                'border-accent-danger';
               
-              {/* Connection lines */}
-              <div className="absolute top-0 left-full w-20 h-px bg-accent-primary"></div>
-              <div className="absolute top-0 right-full w-20 h-px bg-accent-primary"></div>
-              <div className="absolute bottom-0 left-full w-20 h-px bg-accent-primary"></div>
-              <div className="absolute bottom-0 right-full w-20 h-px bg-accent-primary"></div>
+              return (
+                <div
+                  key={node.id}
+                  className={`absolute w-12 h-12 ${statusColor} border-2 rounded-full flex items-center justify-center bg-background-tertiary`}
+                  style={{ left: x, top: y }}
+                  title={`${node.label} (${node.status})`}
+                >
+                  <div className={`w-8 h-8 rounded-full ${
+                    node.type === 'security' ? 'bg-accent-primary' :
+                    node.type === 'network' ? 'bg-accent-secondary' :
+                    node.type === 'server' ? 'bg-accent-tertiary' :
+                    'bg-gray-500'
+                  }`}></div>
+                </div>
+              );
+            })}
+            
+            {/* Display connections */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {data.connections?.map((connection: any, index: number) => {
+                const sourceNode = data.nodes?.find((n: any) => n.id === connection.source);
+                const targetNode = data.nodes?.find((n: any) => n.id === connection.target);
+                
+                if (!sourceNode || !targetNode) return null;
+                
+                const sourceIndex = data.nodes.indexOf(sourceNode);
+                const targetIndex = data.nodes.indexOf(targetNode);
+                
+                const x1 = 50 + (sourceIndex % 3) * 120 + 24; // Center of source node
+                const y1 = 40 + Math.floor(sourceIndex / 3) * 80 + 24;
+                const x2 = 50 + (targetIndex % 3) * 120 + 24; // Center of target node
+                const y2 = 40 + Math.floor(targetIndex / 3) * 80 + 24;
+                
+                return (
+                  <line
+                    key={index}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke="hsl(var(--accent-primary))"
+                    strokeWidth="2"
+                    opacity="0.6"
+                  />
+                );
+              })}
+            </svg>
+            
+            {/* Status indicators for critical nodes */}
+            {data.nodes?.filter((node: any) => node.status === 'critical' || node.status === 'warning').map((node: any, index: number) => {
+              const nodeIndex = data.nodes.indexOf(node);
+              const x = 50 + (nodeIndex % 3) * 120 + 24;
+              const y = 40 + Math.floor(nodeIndex / 3) * 80 + 24;
               
-              {/* Connected nodes */}
-              <div className="absolute top-0 left-full ml-20 -mt-2 w-4 h-4 bg-accent-secondary rounded-full"></div>
-              <div className="absolute top-0 right-full mr-20 -mt-2 w-4 h-4 bg-accent-secondary rounded-full"></div>
-              <div className="absolute bottom-0 left-full ml-20 -mb-2 w-4 h-4 bg-accent-danger rounded-full"></div>
-              <div className="absolute bottom-0 right-full mr-20 -mb-2 w-4 h-4 bg-accent-tertiary rounded-full"></div>
-            </div>
+              return (
+                <div
+                  key={`alert-${node.id}`}
+                  className={`absolute w-3 h-3 rounded-full ping-animation ${
+                    node.status === 'critical' ? 'bg-accent-danger' : 'bg-accent-warning'
+                  }`}
+                  style={{ left: x - 6, top: y - 6 }}
+                />
+              );
+            })}
           </div>
-          
-          {/* Alert points */}
-          <div className="absolute top-1/4 right-1/4 w-3 h-3 bg-accent-danger rounded-full ping-animation"></div>
-          <div className="absolute bottom-1/3 left-1/3 w-3 h-3 bg-accent-warning rounded-full ping-animation"></div>
         </div>
       </CardContent>
     </Card>
