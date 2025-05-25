@@ -9,11 +9,11 @@ from ..services.enhanced_threat_intelligence import EnhancedThreatIntelligence
 from ..services.realtime_threat_detector import RealtimeThreatDetector
 
 # Import legacy services for backward compatibility
-from flask_backend.services.virustotal_service import scan_url, scan_file_hash
-from flask_backend.services.alienvault_service import get_threat_indicators, get_pulse_data
-from flask_backend.services.phishtank_service import check_phishing_url
-from flask_backend.services.google_safebrowsing_service import check_safe_browsing
-from flask_backend.services.urlscan_service import analyze_url
+from services.virustotal_service import scan_url, scan_file_hash
+from services.alienvault_service import get_threat_indicators, get_pulse_data
+from services.phishtank_service import check_phishing_url
+from services.google_safebrowsing_service import check_safe_browsing
+from services.urlscan_service import analyze_url
 
 # Create blueprint
 threats_bp = Blueprint('threats', __name__)

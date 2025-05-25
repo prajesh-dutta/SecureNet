@@ -5,9 +5,9 @@ import random
 import asyncio
 
 # Import services for external API integrations
-from flask_backend.services.shodan_service import get_host_info, search_vulnerabilities
-from flask_backend.services.greynoise_service import get_noise_analysis
-from flask_backend.services.securitytrails_service import get_dns_history
+from services.shodan_service import get_host_info, search_vulnerabilities
+from services.greynoise_service import get_noise_analysis
+from services.securitytrails_service import get_dns_history
 
 # Create blueprint
 network_bp = Blueprint('network', __name__)

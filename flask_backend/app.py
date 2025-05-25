@@ -23,7 +23,7 @@ try:
 except ImportError:
     SCHEDULER_AVAILABLE = False
 
-from config import config
+from config import config_env
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -37,7 +37,12 @@ if LIMITER_AVAILABLE:
     )
 else:
     limiter = None
-scheduler = BackgroundScheduler()
+
+if SCHEDULER_AVAILABLE:
+    scheduler = BackgroundScheduler()
+else:
+    scheduler = None
+    
 socketio = SocketIO(cors_allowed_origins="*")
 
 # Initialize enterprise services
@@ -54,7 +59,7 @@ def create_app(config_name='development'):
     """Create and configure the Flask application"""
     
     app = Flask(__name__)
-    app.config.from_object(config[config_name])
+    app.config.from_object(config_env[config_name])
     
     # Initialize extensions with app
     db.init_app(app)

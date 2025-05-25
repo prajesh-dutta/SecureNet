@@ -1,7 +1,7 @@
 import datetime
 import random
 from flask import current_app
-from flask_backend.models.models import ThreatDetection, SecurityEvent, db
+from models.models import ThreatDetection, SecurityEvent, db
 
 def get_threat_summary():
     """Get summary of threat intelligence data"""

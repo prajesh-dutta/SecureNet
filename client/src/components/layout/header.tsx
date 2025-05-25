@@ -42,7 +42,7 @@ export default function Header() {
         </button>
         <span className="h-6 border-l border-gray-700"></span>
         <div className="flex items-center">
-          <span className="text-sm font-medium mr-2">John Smith</span>
+          <span className="text-sm font-medium mr-2">Prajesh Dutta</span>
           <span className="text-xs px-2 py-1 rounded-full bg-background-tertiary text-accent-primary">SOC Admin</span>
         </div>
       </div>

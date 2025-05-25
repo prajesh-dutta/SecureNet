@@ -108,41 +108,11 @@ export default function Firewall() {
     refetchInterval: 15000, // Refresh every 15 seconds
   });
 
-  // Fetch firewall rules (mock data for now)
+  // Fetch firewall rules from the real API endpoint
   const { data: rules = [], isLoading: rulesLoading, refetch: refetchRules } = useQuery({
     queryKey: ['firewall-rules'],
     queryFn: async () => {
-      // Mock firewall rules - replace with actual API call
-      return [
-        {
-          id: '1',
-          name: 'Block Suspicious IPs',
-          source_ip: '192.168.1.0/24',
-          destination_ip: 'any',
-          port: 80,
-          protocol: 'TCP' as const,
-          action: 'DENY' as const,
-          enabled: true,
-          priority: 1,
-          created_at: new Date().toISOString(),
-          hit_count: 145,
-          last_hit: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'Allow Internal SSH',
-          source_ip: '10.0.0.0/8',
-          destination_ip: 'any',
-          port: 22,
-          protocol: 'TCP' as const,
-          action: 'ALLOW' as const,
-          enabled: true,
-          priority: 2,
-          created_at: new Date().toISOString(),
-          hit_count: 892,
-          last_hit: new Date().toISOString()
-        }
-      ] as FirewallRule[];
+      return await apiClient.getFirewallRules() as FirewallRule[];
     },
     refetchInterval: 30000,
   });

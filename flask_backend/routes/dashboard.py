@@ -2,8 +2,8 @@ from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
 
 # Import services
-from flask_backend.services.system_service import get_system_metrics
-from flask_backend.services.threat_service import get_threat_summary
+from services.system_service import get_system_metrics
+from services.threat_service import get_threat_summary
 
 # Create blueprint
 dashboard_bp = Blueprint('dashboard', __name__)

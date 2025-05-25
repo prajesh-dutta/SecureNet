@@ -337,6 +337,11 @@ class APIClient {
     return response.success;
   }
 
+  // Firewall APIs
+  async getFirewallRules(): Promise<any[]> {
+    return this.get('/firewall/rules');
+  }
+
   // Generic HTTP methods
   private async request(method: string, endpoint: string, data?: any): Promise<any> {
     const url = `${this.baseURL}${endpoint}`;

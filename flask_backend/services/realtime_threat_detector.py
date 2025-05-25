@@ -9,8 +9,8 @@ from typing import Dict, List, Any, Callable, Optional
 from dataclasses import dataclass, asdict
 from enum import Enum
 from flask import current_app
-from flask_backend.models.models import SecurityEvent, ThreatDetection, db
-from flask_backend.services.enhanced_threat_intelligence import EnhancedThreatIntelligence, IndicatorType, ThreatLevel
+from models.models import SecurityEvent, ThreatDetection, db
+from services.enhanced_threat_intelligence import EnhancedThreatIntelligence, IndicatorType, ThreatLevel
 
 class AlertSeverity(Enum):
     CRITICAL = "critical"

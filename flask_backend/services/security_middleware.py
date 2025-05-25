@@ -23,12 +23,11 @@ from functools import wraps
 import re
 import secrets
 import logging
-
-from flask import request, jsonify, abort, g, current_app
-from werkzeug.exceptions import TooManyRequests, BadRequest, Forbidden
 import jwt
-from werkzeug.utils import secure_filename
 import bleach
+from flask import Flask, request, jsonify, g, abort, current_app
+from werkzeug.exceptions import TooManyRequests, BadRequest, Forbidden
+from werkzeug.utils import secure_filename
 
 # Rate limiting storage
 rate_limit_storage = defaultdict(lambda: {'requests': deque(), 'blocked_until': None})
@@ -748,6 +747,21 @@ def secure_filename_validator(filename: str) -> str:
 
 def setup_security_middleware(app, config=None):
     """Setup security middleware for Flask app"""
+    middleware = SecurityMiddleware(app, config)
+    app.extensions['security_middleware'] = middleware
+    return middleware
+
+def require_rate_limit(limit_type: str = 'api'):
+    """Decorator for requiring rate limit checking"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def init_security_middleware(app, config=None):
+    """Initialize security middleware for Flask app"""
     middleware = SecurityMiddleware(app, config)
     app.extensions['security_middleware'] = middleware
     return middleware

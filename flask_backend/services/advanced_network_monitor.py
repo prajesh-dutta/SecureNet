@@ -12,7 +12,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 from collections import defaultdict, deque
 from flask import current_app
-from flask_backend.models.models import NetworkTraffic, db
+from models.models import NetworkTraffic, db
 
 @dataclass
 class NetworkDevice:

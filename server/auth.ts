@@ -1,5 +1,4 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcryptjs';
 import { Express, Request, Response, NextFunction } from 'express';
@@ -73,48 +72,7 @@ export function setupAuth(app: Express) {
     )
   );
 
-  // Google OAuth strategy
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: '/api/auth/google/callback',
-          scope: ['profile', 'email'],
-        },
-        async (accessToken, refreshToken, profile, done) => {
-          try {
-            // Check if user already exists
-            const email = profile.emails?.[0]?.value;
-            if (!email) {
-              return done(new Error('Email not provided by Google'), null);
-            }
-            
-            let user = await storage.getUserByEmail(email);
-            
-            // If user doesn't exist, create a new one
-            if (!user) {
-              user = await storage.createUser({
-                username: email.split('@')[0],
-                email: email,
-                password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
-                role: 'user',
-                lastLogin: new Date()
-              });
-            } else {
-              // Update last login time
-              await storage.updateLastLogin(user.id);
-            }
-            
-            return done(null, user);
-          } catch (error) {
-            return done(error, null);
-          }
-        }
-      )
-    );
-  }
+  // Local authentication only - Google OAuth has been removed
 
   // Authentication middleware
   app.use((req, res, next) => {
@@ -182,16 +140,7 @@ function setupAuthRoutes(app: Express) {
     })(req, res, next);
   });
 
-  // Google OAuth routes
-  app.get('/api/auth/google', passport.authenticate('google'));
-
-  app.get(
-    '/api/auth/google/callback',
-    passport.authenticate('google', {
-      failureRedirect: '/login',
-      successRedirect: '/dashboard',
-    })
-  );
+  // Google OAuth routes have been removed
 
   // Logout route
   app.post('/api/auth/logout', (req: Request, res: Response) => {

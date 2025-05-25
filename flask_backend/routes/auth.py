@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 # Import models
-from flask_backend.models.models import User, db
+from models.models import User, db
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__)

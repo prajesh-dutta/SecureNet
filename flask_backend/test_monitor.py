@@ -14,9 +14,9 @@ def main():
         metrics = monitor.get_real_system_health()
         
         print("\nReal System Metrics:")
-        print(f"CPU: {metrics['cpu']['usage_percent']}%")
-        print(f"Memory: {metrics['memory']['usage_percent']}%")
-        print(f"Disk: {metrics['disk']['usage_percent']}%")
+        print(f"CPU: {metrics['cpu_usage']}%")
+        print(f"Memory: {metrics['memory_usage']}%")
+        print(f"Disk: {metrics['disk_usage']}%")
         print(f"Overall Status: {metrics['overall_status']}")
         print(f"Hostname: {metrics['hostname']}")
         print(f"Platform: {metrics['platform']}")
