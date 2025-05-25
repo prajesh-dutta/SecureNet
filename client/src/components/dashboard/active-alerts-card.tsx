@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 
 interface Alert {
   id: string;
@@ -19,7 +20,20 @@ interface Alert {
 
 export default function ActiveAlertsCard() {
   const { data, isLoading, isError, refetch } = useQuery<Alert[]>({
-    queryKey: ['/api/threats/alerts'],
+    queryKey: ['active-alerts'],
+    queryFn: async () => {
+      const threats = await apiClient.getRecentThreats(10);
+      return threats
+        .filter(threat => threat.status === 'active')
+        .map((threat, index) => ({
+          id: threat.id,
+          title: threat.type.charAt(0).toUpperCase() + threat.type.slice(1),
+          description: threat.description,
+          timestamp: new Date(threat.timestamp).toLocaleTimeString(),
+          severity: threat.severity.charAt(0).toUpperCase() + threat.severity.slice(1) as 'Critical' | 'Medium' | 'Low'
+        }));
+    },
+    refetchInterval: 15000
   });
 
   const getSeverityColor = (severity: string) => {

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required
 import datetime
 import random
@@ -7,48 +7,153 @@ import random
 vulnerabilities_bp = Blueprint('vulnerabilities', __name__)
 
 @vulnerabilities_bp.route('/scan-results', methods=['GET'])
+@jwt_required()
 def get_scan_results():
-    """Get vulnerability scan results"""
+    """Get vulnerability scan results using the vulnerability manager"""
     try:
-        # In a real implementation, this would query the database
-        # for actual vulnerability scan results
+        vuln_manager = current_app.vulnerability_manager
+        if not vuln_manager:
+            return jsonify({'error': 'Vulnerability manager not available'}), 503
         
-        # Generate sample vulnerability scan results
-        vulnerabilities = []
+        severity_filter = request.args.get('severity')
+        limit = request.args.get('limit', 50, type=int)
         
-        severity_levels = ["Critical", "High", "Medium", "Low"]
-        status_options = ["Open", "In Progress", "Fixed", "False Positive"]
+        vulnerabilities = vuln_manager.get_vulnerabilities(
+            severity_filter=severity_filter,
+            limit=limit
+        )
         
-        for i in range(15):
-            severity = random.choice(severity_levels)
-            cve_id = f"CVE-2024-{random.randint(1000, 9999)}"
-            
-            vulnerabilities.append({
-                "id": f"vuln-{i+1}",
-                "title": get_vulnerability_title(severity),
-                "cve_id": cve_id,
-                "severity": severity,
-                "cvss_score": get_cvss_score(severity),
-                "affected_system": f"system-{random.randint(1, 20)}",
-                "status": random.choice(status_options),
-                "detection_date": (datetime.datetime.now() - datetime.timedelta(days=random.randint(1, 30))).strftime("%Y-%m-%d"),
-                "description": get_vulnerability_description(cve_id, severity)
-            })
-        
-        return jsonify(vulnerabilities), 200
+        return jsonify({
+            'vulnerabilities': vulnerabilities,
+            'count': len(vulnerabilities),
+            'filters': {'severity': severity_filter} if severity_filter else None
+        }), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @vulnerabilities_bp.route('/start-scan', methods=['POST'])
+@jwt_required()
 def start_vulnerability_scan():
-    """Start a new vulnerability scan"""
+    """Start a new vulnerability scan using the vulnerability manager"""
     data = request.get_json()
     
-    if not data or not data.get('target'):
-        return jsonify({'error': 'Target is required'}), 400
+    if not data or not data.get('targets'):
+        return jsonify({'error': 'Targets list is required'}), 400
     
-    target = data.get('target')
+    targets = data.get('targets', [])
+    scan_profile = data.get('profile', 'standard')
+    
+    try:
+        vuln_manager = current_app.vulnerability_manager
+        if not vuln_manager:
+            return jsonify({'error': 'Vulnerability manager not available'}), 503
+        
+        scan_id = vuln_manager.start_vulnerability_scan(targets, scan_profile)
+        
+        return jsonify({
+            'scan_id': scan_id,
+            'targets': targets,
+            'profile': scan_profile,
+            'status': 'initiated',
+            'message': f'Vulnerability scan started for {len(targets)} targets'
+        }), 202
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@vulnerabilities_bp.route('/scan-status/<scan_id>', methods=['GET'])
+@jwt_required()
+def get_scan_status(scan_id):
+    """Get the status of a vulnerability scan"""
+    try:
+        vuln_manager = current_app.vulnerability_manager
+        if not vuln_manager:
+            return jsonify({'error': 'Vulnerability manager not available'}), 503
+        
+        status = vuln_manager.get_scan_status(scan_id)
+        
+        return jsonify(status), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@vulnerabilities_bp.route('/statistics', methods=['GET'])
+@jwt_required()
+def get_vulnerability_statistics():
+    """Get vulnerability statistics and metrics"""
+    try:
+        vuln_manager = current_app.vulnerability_manager
+        if not vuln_manager:
+            return jsonify({'error': 'Vulnerability manager not available'}), 503
+        
+        stats = vuln_manager.get_vulnerability_statistics()
+        
+        return jsonify(stats), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@vulnerabilities_bp.route('/update-status', methods=['PUT'])
+@jwt_required()
+def update_vulnerability_status():
+    """Update the status of a vulnerability"""
+    data = request.get_json()
+    
+    if not data or not data.get('vulnerability_id') or not data.get('status'):
+        return jsonify({'error': 'Vulnerability ID and status are required'}), 400
+    
+    vuln_id = data.get('vulnerability_id')
+    status = data.get('status')
+    notes = data.get('notes')
+    
+    try:
+        vuln_manager = current_app.vulnerability_manager
+        if not vuln_manager:
+            return jsonify({'error': 'Vulnerability manager not available'}), 503
+        
+        success = vuln_manager.update_vulnerability_status(vuln_id, status, notes)
+        
+        if success:
+            return jsonify({
+                'message': 'Vulnerability status updated successfully',
+                'vulnerability_id': vuln_id,
+                'new_status': status
+            }), 200
+        else:
+            return jsonify({'error': 'Failed to update vulnerability status'}), 500
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@vulnerabilities_bp.route('/severity-distribution', methods=['GET'])
+@jwt_required()
+def get_severity_distribution():
+    """Get vulnerability severity distribution for charts"""
+    try:
+        vuln_manager = current_app.vulnerability_manager
+        if not vuln_manager:
+            return jsonify({'error': 'Vulnerability manager not available'}), 503
+        
+        stats = vuln_manager.get_vulnerability_statistics()
+        severity_counts = stats.get('by_severity', {})
+        
+        # Format for frontend charts
+        distribution = [
+            {'severity': 'Critical', 'count': severity_counts.get('critical', 0), 'color': '#dc2626'},
+            {'severity': 'High', 'count': severity_counts.get('high', 0), 'color': '#ea580c'},
+            {'severity': 'Medium', 'count': severity_counts.get('medium', 0), 'color': '#ca8a04'},
+            {'severity': 'Low', 'count': severity_counts.get('low', 0), 'color': '#16a34a'},
+            {'severity': 'Info', 'count': severity_counts.get('info', 0), 'color': '#2563eb'}
+        ]
+        
+        return jsonify({
+            'distribution': distribution,
+            'total': sum(item['count'] for item in distribution)
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     scan_type = data.get('scan_type', 'full')
     
     try:

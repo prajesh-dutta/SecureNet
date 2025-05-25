@@ -1,0 +1,117 @@
+# SecureNet Enterprise SOC Platform - Flask Backend Dependencies
+# Production-ready cybersecurity dashboard backend
+
+# Core Flask and Web Framework
+Flask==2.3.3
+Flask-JWT-Extended==4.5.3
+Flask-CORS==4.0.0
+Flask-Limiter==3.5.0
+Flask-SQLAlchemy==3.1.1
+Flask-SocketIO==5.3.6
+
+# Database
+SQLAlchemy==2.0.23
+psycopg2-binary==2.9.8
+alembic==1.12.1
+
+# HTTP and API clients
+requests==2.31.0
+aiohttp==3.9.0
+httpx==0.25.1
+
+# Security and Authentication
+cryptography==41.0.7
+bcrypt==4.0.1
+PyJWT==2.8.0
+python-jose[cryptography]==3.3.0
+
+# Configuration and Environment
+python-dotenv==1.0.0
+environs==10.0.0
+
+# Task Scheduling and Background Jobs
+APScheduler==3.10.4
+celery==5.3.4
+redis==5.0.1
+
+# Network Security and Analysis
+scapy==2.5.0
+nmap==3.0.1
+python-nmap==0.7.1
+netaddr==0.10.1
+psutil==5.9.6
+
+# Machine Learning and Anomaly Detection
+scikit-learn==1.3.2
+numpy==1.25.2
+pandas==1.5.3
+joblib==1.3.2
+
+# Data Processing and Analysis
+lxml==4.9.3
+beautifulsoup4==4.12.2
+xmltodict==0.13.0
+jsonschema==4.19.2
+
+# Logging and Monitoring
+loguru==0.7.2
+prometheus-client==0.18.0
+elastic-apm==6.20.0
+
+# File Processing and Utilities
+python-magic==0.4.27
+pillow==10.1.0
+pdfplumber==0.10.3
+yara-python==4.3.1
+
+# Date and Time Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+pendulum==2.1.2
+
+# Email and Notifications
+emails==0.6
+twilio==8.10.1
+slack-sdk==3.22.0
+
+# Data Validation and Serialization
+marshmallow==3.20.1
+pydantic==2.5.0
+cerberus==1.3.5
+
+# Testing (for production testing capabilities)
+pytest==7.4.3
+pytest-flask==1.3.0
+pytest-cov==4.1.0
+factory-boy==3.3.1
+
+# Production Server
+gunicorn==21.2.0
+eventlet==0.33.3
+gevent==23.9.1
+
+# Development and Debugging Tools
+flask-debugtoolbar==0.13.1
+ipython==8.17.2
+
+# Additional Security Libraries
+hashids==1.3.1
+secrets==1.0.0
+argon2-cffi==23.1.0
+
+# Performance and Caching
+redis-py-cluster==2.1.3
+memcached==1.59
+
+# Data Export and Reporting
+openpyxl==3.1.2
+reportlab==4.0.7
+jinja2==3.1.2
+
+# WebSocket Support
+python-socketio==5.10.0
+websockets==12.0
+
+# System Integration
+systemd-python==235
+watchdog==3.0.0

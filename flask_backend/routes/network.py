@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required
 import datetime
 import random
+import asyncio
 
 # Import services for external API integrations
 from flask_backend.services.shodan_service import get_host_info, search_vulnerabilities
@@ -10,6 +11,174 @@ from flask_backend.services.securitytrails_service import get_dns_history
 
 # Create blueprint
 network_bp = Blueprint('network', __name__)
+
+@network_bp.route('/advanced-scan', methods=['POST'])
+@jwt_required()
+def advanced_network_scan():
+    """Perform advanced network scan using our network monitor"""
+    data = request.get_json()
+    
+    target = data.get('target', '192.168.1.0/24')  # Default to common subnet
+    scan_type = data.get('scan_type', 'full')  # full, quick, vulnerability
+    
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        # Start network scan
+        scan_id = network_monitor.start_network_scan(target, scan_type)
+        
+        return jsonify({
+            'scan_id': scan_id,
+            'target': target,
+            'scan_type': scan_type,
+            'status': 'initiated',
+            'message': f'Advanced network scan initiated for {target}'
+        }), 202
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/scan-status/<scan_id>', methods=['GET'])
+@jwt_required()
+def get_scan_status(scan_id):
+    """Get status of a network scan"""
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        status = network_monitor.get_scan_status(scan_id)
+        
+        return jsonify(status), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/discovered-devices', methods=['GET'])
+@jwt_required()
+def get_discovered_devices():
+    """Get list of discovered network devices"""
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        devices = network_monitor.get_discovered_devices()
+        
+        return jsonify({
+            'devices': devices,
+            'count': len(devices),
+            'last_scan': datetime.datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/traffic-flows', methods=['GET'])
+@jwt_required()
+def get_traffic_flows():
+    """Get real-time network traffic flows"""
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        flows = network_monitor.get_traffic_flows()
+        
+        return jsonify({
+            'flows': flows,
+            'timestamp': datetime.datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/bandwidth-usage', methods=['GET'])
+@jwt_required()
+def get_bandwidth_usage():
+    """Get bandwidth usage statistics"""
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        usage = network_monitor.get_bandwidth_usage()
+        
+        return jsonify(usage), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/vulnerability-scan', methods=['POST'])
+@jwt_required()
+def start_vulnerability_scan():
+    """Start a comprehensive vulnerability scan"""
+    data = request.get_json()
+    
+    targets = data.get('targets', [])
+    scan_profile = data.get('profile', 'standard')  # standard, aggressive, stealth
+    
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        scan_id = network_monitor.start_vulnerability_scan(targets, scan_profile)
+        
+        return jsonify({
+            'scan_id': scan_id,
+            'targets': targets,
+            'profile': scan_profile,
+            'status': 'initiated',
+            'estimated_duration': '30-60 minutes'
+        }), 202
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/vulnerabilities', methods=['GET'])
+@jwt_required()
+def get_network_vulnerabilities():
+    """Get discovered network vulnerabilities"""
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        severity_filter = request.args.get('severity')  # critical, high, medium, low
+        limit = request.args.get('limit', 50, type=int)
+        
+        vulnerabilities = network_monitor.get_vulnerabilities(
+            severity_filter=severity_filter,
+            limit=limit
+        )
+        
+        return jsonify({
+            'vulnerabilities': vulnerabilities,
+            'count': len(vulnerabilities),
+            'filters': {'severity': severity_filter} if severity_filter else None
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@network_bp.route('/network-health', methods=['GET'])
+@jwt_required()
+def get_network_health():
+    """Get overall network health status"""
+    try:
+        network_monitor = current_app.network_monitor
+        if not network_monitor:
+            return jsonify({'error': 'Network monitor service not available'}), 503
+        
+        health = network_monitor.get_network_health()
+        
+        return jsonify(health), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @network_bp.route('/host-info', methods=['POST'])
 def get_host_information():

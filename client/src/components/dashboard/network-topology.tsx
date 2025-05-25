@@ -9,10 +9,13 @@ import { Maximize, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 export default function NetworkTopology() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['/api/network/topology'],
+    queryFn: () => apiClient.getNetworkTopology(),
+    refetchInterval: 45000, // Refresh every 45 seconds
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);

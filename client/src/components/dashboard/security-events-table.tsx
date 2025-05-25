@@ -16,19 +16,11 @@ import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, ExternalLink } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-
-export interface SecurityEvent {
-  id: string;
-  timestamp: string;
-  eventType: string;
-  source: string;
-  destination: string;
-  severity: 'Critical' | 'Medium' | 'Low';
-  status: 'Blocked' | 'Active' | 'Investigating';
-}
+import { apiClient, type SecurityEvent } from '@/lib/api-client';
 
 const severityColors = {
   Critical: 'bg-accent-danger/20 text-accent-danger',
+  High: 'bg-red-500/20 text-red-400',
   Medium: 'bg-accent-warning/20 text-accent-warning',
   Low: 'bg-gray-700 text-gray-400',
 };
@@ -36,12 +28,15 @@ const severityColors = {
 const statusColors = {
   Blocked: 'bg-accent-secondary/20 text-accent-secondary',
   Active: 'bg-accent-danger/20 text-accent-danger',
-  Investigating: 'bg-gray-700 text-gray-400',
+  Resolved: 'bg-green-500/20 text-green-400',
+  Investigating: 'bg-accent-warning/20 text-accent-warning',
 };
 
 export default function SecurityEventsTable() {
   const { data, isLoading, isError, refetch } = useQuery<SecurityEvent[]>({
-    queryKey: ['/api/threats'],
+    queryKey: ['security-events'],
+    queryFn: () => apiClient.getSecurityEvents(20),
+    refetchInterval: 30000
   });
 
   if (isLoading) {
@@ -131,17 +126,17 @@ export default function SecurityEventsTable() {
                   key={event.id} 
                   className="border-gray-800 hover:bg-background-tertiary/60"
                 >
-                  <TableCell className="py-3 text-xs">{event.timestamp}</TableCell>
-                  <TableCell className="py-3 text-xs">{event.eventType}</TableCell>
-                  <TableCell className="py-3 text-xs">{event.source}</TableCell>
-                  <TableCell className="py-3 text-xs">{event.destination}</TableCell>
+                  <TableCell className="py-3 text-xs">{new Date(event.timestamp).toLocaleString()}</TableCell>
+                  <TableCell className="py-3 text-xs">{event.event_type}</TableCell>
+                  <TableCell className="py-3 text-xs">{event.source_ip}</TableCell>
+                  <TableCell className="py-3 text-xs">{event.destination_ip || 'N/A'}</TableCell>
                   <TableCell className="py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${severityColors[event.severity]}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${severityColors[event.severity] || severityColors.Low}`}>
                       {event.severity}
                     </span>
                   </TableCell>
                   <TableCell className="py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[event.status]}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[event.status] || statusColors.Active}`}>
                       {event.status}
                     </span>
                   </TableCell>

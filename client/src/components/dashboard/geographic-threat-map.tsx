@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { apiClient } from '@/lib/api-client';
 
 interface ThreatLocation {
   id: string;
   latitude: number;
   longitude: number;
   severity: 'Critical' | 'Medium' | 'Low';
+  country?: string;
+  description?: string;
 }
 
 interface GeoMapData {
@@ -27,7 +30,30 @@ interface GeoMapData {
 
 export default function GeographicThreatMap() {
   const { data, isLoading, isError, refetch } = useQuery<GeoMapData>({
-    queryKey: ['/api/threats/geo'],
+    queryKey: ['geographic-threats'],
+    queryFn: async () => {
+      const geoThreats = await apiClient.getGeographicThreats();
+      
+      // Transform the data into the expected format
+      const threats: ThreatLocation[] = geoThreats.map((threat: any, index: number) => ({
+        id: threat.id || `threat-${index}`,
+        latitude: threat.latitude || (Math.random() * 60 + 10), // Random lat if not provided
+        longitude: threat.longitude || (Math.random() * 140 - 70), // Random lng if not provided
+        severity: threat.severity === 'critical' ? 'Critical' : 
+                 threat.severity === 'medium' ? 'Medium' : 'Low',
+        country: threat.country || 'Unknown',
+        description: threat.description || `Threat from ${threat.source_ip || 'Unknown IP'}`
+      }));
+      
+      const summary = {
+        critical: threats.filter(t => t.severity === 'Critical').length,
+        medium: threats.filter(t => t.severity === 'Medium').length,
+        low: threats.filter(t => t.severity === 'Low').length
+      };
+      
+      return { threats, summary };
+    },
+    refetchInterval: 45000
   });
 
   if (isLoading) {

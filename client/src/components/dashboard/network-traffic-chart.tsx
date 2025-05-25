@@ -18,10 +18,13 @@ import {
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { apiClient } from '@/lib/api-client';
 
 export default function NetworkTrafficChart() {
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['/api/network/traffic'],
+    queryKey: ['network-traffic'],
+    queryFn: () => apiClient.getNetworkTrafficData(),
+    refetchInterval: 30000
   });
 
   if (isLoading) {

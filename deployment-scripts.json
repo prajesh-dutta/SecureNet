@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "deploy:quick": "node scripts/deploy-quick.js",
+    "deploy:aws": "node scripts/deploy-aws.js", 
+    "deploy:docker": "docker-compose -f docker-compose.prod.yml up -d",
+    "deploy:manual": "node scripts/deploy-manual.js",
+    "build:prod": "vite build",
+    "preview": "vite preview",
+    "deploy:netlify": "npm run build:prod && netlify deploy --prod --dir=dist",
+    "deploy:vercel": "npm run build:prod && vercel --prod"
+  }
+}

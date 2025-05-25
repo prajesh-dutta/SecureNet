@@ -15,6 +15,7 @@ import {
   Cell, 
   ResponsiveContainer 
 } from 'recharts';
+import { apiClient } from '@/lib/api-client';
 
 interface ThreatLevelData {
   score: number;
@@ -28,7 +29,41 @@ interface ThreatLevelData {
 
 export default function ThreatLevelGauge() {
   const { data, isLoading, isError, refetch } = useQuery<ThreatLevelData>({
-    queryKey: ['/api/threats/level'],
+    queryKey: ['threats-level'],
+    queryFn: async () => {
+      const threats = await apiClient.getRecentThreats(50);
+      const criticalCount = threats.filter(t => t.severity === 'critical').length;
+      const highCount = threats.filter(t => t.severity === 'high').length;
+      const mediumCount = threats.filter(t => t.severity === 'medium').length;
+      const lowCount = threats.filter(t => t.severity === 'low').length;
+      
+      // Calculate threat level based on severity distribution
+      const totalThreats = threats.length;
+      const criticalWeight = criticalCount * 4;
+      const highWeight = highCount * 3;
+      const mediumWeight = mediumCount * 2;
+      const lowWeight = lowCount * 1;
+      
+      const totalWeight = criticalWeight + highWeight + mediumWeight + lowWeight;
+      const maxPossibleWeight = totalThreats * 4;
+      
+      const score = maxPossibleWeight > 0 ? Math.round((totalWeight / maxPossibleWeight) * 100) : 15;
+      
+      let level: 'Low' | 'Medium' | 'High' = 'Low';
+      if (score >= 75) level = 'High';
+      else if (score >= 40) level = 'Medium';
+      
+      return {
+        score,
+        level,
+        metrics: [
+          { name: 'Critical Threats', level: criticalCount > 5 ? 'High' : criticalCount > 2 ? 'Medium' : 'Low', value: Math.min((criticalCount / 10) * 100, 100) },
+          { name: 'Network Security', level: score > 60 ? 'High' : score > 30 ? 'Medium' : 'Low', value: 100 - score },
+          { name: 'System Health', level: 'Low', value: 85 }
+        ]
+      };
+    },
+    refetchInterval: 30000
   });
 
   const getLevelColor = (level: 'Low' | 'Medium' | 'High') => {

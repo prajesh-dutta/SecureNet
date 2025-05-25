@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/api-client';
 
 interface SystemStatus {
   overallStatus: 'Healthy' | 'Degraded' | 'Critical';
@@ -20,7 +21,44 @@ interface SystemStatus {
 
 export default function SystemStatusCard() {
   const { data, isLoading, isError, refetch } = useQuery<SystemStatus>({
-    queryKey: ['/api/dashboard/metrics'],
+    queryKey: ['system-metrics'],
+    queryFn: async () => {
+      const metrics = await apiClient.getSystemMetrics();
+      
+      // Transform SystemMetrics to SystemStatus format
+      const overallHealth = (metrics.cpu_usage + metrics.memory_usage + metrics.disk_usage) / 3;
+      let overallStatus: 'Healthy' | 'Degraded' | 'Critical' = 'Healthy';
+      
+      if (overallHealth > 80) overallStatus = 'Critical';
+      else if (overallHealth > 60) overallStatus = 'Degraded';
+      
+      return {
+        overallStatus,
+        systems: [
+          {
+            name: 'IDS Engine',
+            status: metrics.cpu_usage > 80 ? 'Degraded' : 'Online',
+            health: 100 - metrics.cpu_usage
+          },
+          {
+            name: 'Threat Intelligence',
+            status: 'Online',
+            health: 95
+          },
+          {
+            name: 'Network Monitor',
+            status: metrics.memory_usage > 80 ? 'Degraded' : 'Online',
+            health: 100 - metrics.memory_usage
+          },
+          {
+            name: 'Log Analysis',
+            status: metrics.disk_usage > 90 ? 'Degraded' : 'Online',
+            health: 100 - metrics.disk_usage
+          }
+        ]
+      };
+    },
+    refetchInterval: 60000
   });
 
   const getStatusColor = (status: string) => {
