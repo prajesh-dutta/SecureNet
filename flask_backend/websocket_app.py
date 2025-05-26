@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Simple Flask Backend for SecureNet SOC Platform with WebSocket Support
-Real-time system monitoring with WebSocket streaming
-"""
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, disconnect
@@ -11,35 +5,26 @@ import json
 import random
 import threading
 import time
+import socket
+import platform
 from datetime import datetime, timedelta
 import uuid
 from services.real_system_monitor import RealSystemMonitor
 import psutil
 
-# Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
 
-# Enable CORS for all routes
 CORS(app, origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"])
-
-# Initialize SocketIO with CORS support
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"])
 
-# Initialize real system monitor
 real_monitor = RealSystemMonitor()
-
-# Store active connections for broadcasting
 active_connections = set()
 
-# Background thread for real-time data broadcasting
 def background_thread():
-    """Continuously send real-time system data to all connected clients"""
     while True:
         try:
-            # Get real system data
             real_data = real_monitor.get_real_system_health()
-              # Broadcast to all connected clients
             if active_connections:
                 socketio.emit('system_metrics_update', {
                     'cpu_usage': real_data.get('cpu_usage', 0),
@@ -52,11 +37,8 @@ def background_thread():
                     'timestamp': time.time(),
                     'real_time_data': True
                 })
-                print(f"Broadcasted metrics to {len(active_connections)} clients")
-            
-            time.sleep(2)  # Update every 2 seconds
+            time.sleep(2)
         except Exception as e:
-            print(f"Error in background thread: {e}")
             time.sleep(5)
 
 # Start background thread when the app starts
@@ -67,16 +49,12 @@ def start_background_thread():
     if thread is None:
         thread = threading.Thread(target=background_thread, daemon=True)
         thread.start()
-        print("Background metrics thread started")
 
-# WebSocket event handlers
 @socketio.on('connect')
 def handle_connect():
-    print(f'Client connected: {request.sid}')
     active_connections.add(request.sid)
     start_background_thread()
     
-    # Send immediate data to the newly connected client
     try:
         real_data = real_monitor.get_real_system_health()
         emit('system_metrics_update', {
@@ -90,18 +68,15 @@ def handle_connect():
             'timestamp': time.time(),
             'real_time_data': True
         })
-        print(f"Sent initial data to client {request.sid}")
     except Exception as e:
-        print(f"Error sending initial data: {e}")
+        pass
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print(f'Client disconnected: {request.sid}')
     active_connections.discard(request.sid)
 
 @socketio.on('request_system_update')
 def handle_system_update_request():
-    """Handle manual requests for system updates"""
     try:
         real_data = real_monitor.get_real_system_health()
         emit('system_metrics_update', {
@@ -115,9 +90,8 @@ def handle_system_update_request():
             'timestamp': time.time(),
             'real_time_data': True
         })
-        print(f"Manual update sent to client {request.sid}")
     except Exception as e:
-        print(f"Error handling system update request: {e}")
+        pass
 
 # Mock data generators (keeping existing functionality)
 def generate_mock_security_logs(limit=50):
@@ -189,13 +163,8 @@ def get_dashboard_overview():
 @app.route('/api/dashboard/metrics', methods=['GET'])
 def get_dashboard_metrics():
     try:
-        # Get real system health data
         real_data = real_monitor.get_real_system_health()
         
-        # Print the data for debugging
-        print(f"Real metrics data: {real_data}")
-        
-        # Return real metrics in the expected format
         return jsonify({
             'cpu_usage': real_data.get('cpu_usage', 0),
             'memory_usage': real_data.get('memory_usage', 0), 
@@ -205,19 +174,17 @@ def get_dashboard_metrics():
             'uptime': real_data.get('uptime', 0),
             'hostname': real_data.get('hostname', 'unknown'),
             'platform': real_data.get('platform', 'unknown'),
-            'real_time_data': True,  # Flag to indicate this is real data
+            'real_time_data': True,
             'timestamp': datetime.now().timestamp()
         })
     except Exception as e:
-        print(f"Error in get_dashboard_metrics: {e}")
-        # Fallback to minimal data in case of error
         return jsonify({
-            'cpu_usage': random.randint(10, 30),  # Random values for better UI display
+            'cpu_usage': random.randint(10, 30),
             'memory_usage': random.randint(30, 70),
             'disk_usage': random.randint(20, 60),
             'network_throughput': random.randint(100, 1000),
             'active_connections': random.randint(5, 50),
-            'uptime': 3600,  # 1 hour in seconds
+            'uptime': 3600,
             'hostname': socket.gethostname(),
             'platform': platform.system(),
             'real_time_data': False,
@@ -242,19 +209,14 @@ def get_system_status():
     try:
         real_data = real_monitor.get_real_system_health()
         
-        # Print the data for debugging
-        print(f"System status data: {real_data}")
-        
-        # Get system uptime in a readable format
         uptime_seconds = real_data.get('uptime', 0)
         uptime_str = str(timedelta(seconds=int(uptime_seconds)))
         
-        # Transform real data to match frontend expectations
         return jsonify({
             'hostname': real_data.get('hostname', 'unknown'),
             'platform': real_data.get('platform', 'unknown'),
             'uptime': uptime_seconds,
-            'uptime_formatted': uptime_str,  # Add formatted uptime for display
+            'uptime_formatted': uptime_str,
             'cpu_usage': real_data.get('cpu_usage', 0),
             'memory_usage': real_data.get('memory_usage', 0),
             'disk_usage': real_data.get('disk_usage', 0),
@@ -263,11 +225,10 @@ def get_system_status():
             'real_time_data': True
         })
     except Exception as e:
-        print(f"Error in get_system_status: {e}")
         return jsonify({
             'hostname': socket.gethostname(),
             'platform': platform.system(),
-            'uptime': 3600,  # Default 1 hour
+            'uptime': 3600,
             'uptime_formatted': '1:00:00',
             'cpu_usage': 0,
             'memory_usage': 0,
@@ -280,7 +241,6 @@ def get_system_status():
 
 @app.route('/api/dashboard/traffic', methods=['GET'])
 def get_network_traffic():
-    """Mock network traffic data for dashboard charts"""
     return jsonify({
         'current_traffic': {
             'inbound': random.randint(100, 1000),
@@ -292,13 +252,12 @@ def get_network_traffic():
                 'timestamp': (datetime.now() - timedelta(minutes=i*5)).isoformat(),
                 'inbound': random.randint(100, 1000),
                 'outbound': random.randint(100, 1000)
-            } for i in range(24)  # Last 2 hours of data
+            } for i in range(24)
         ]
     })
 
 @app.route('/api/security/events', methods=['GET'])
 def get_security_events():
-    """Get security events for the dashboard table"""
     limit = int(request.args.get('limit', 20))
     
     event_types = ['Authentication Failure', 'Suspicious Login', 'Malware Detected', 'Firewall Block', 'Data Access Violation']
@@ -323,7 +282,6 @@ def get_security_events():
 
 @app.route('/api/network/topology', methods=['GET'])
 def get_network_topology():
-    """Mock network topology data"""
     return jsonify({
         'nodes': [
             {'id': 'firewall', 'type': 'security', 'label': 'Firewall', 'status': 'healthy'},
@@ -346,7 +304,6 @@ def get_network_topology():
 
 @app.route('/api/threats/geographic', methods=['GET'])
 def get_geographic_threats():
-    """Mock geographic threat data for the threat map"""
     locations = [
         {'country': 'USA', 'city': 'New York', 'lat': 40.7128, 'lng': -74.0060, 'threats': random.randint(1, 10)},
         {'country': 'China', 'city': 'Beijing', 'lat': 39.9042, 'lng': 116.4074, 'threats': random.randint(1, 15)},
@@ -361,26 +318,20 @@ def get_geographic_threats():
 
 @app.route('/api/security/ids/status', methods=['GET'])
 def get_ids_status():
-    """Get the status of the IDS system - now using real data"""
     real_data = real_monitor.get_real_system_health()
     
-    # Get boot time and calculate uptime in seconds
     boot_time = psutil.boot_time()
     uptime_seconds = time.time() - boot_time
     
-    # IDS signatures count - this could be loaded from an actual file in production
     signatures_count = 8750
     
-    # Calculate real events today from security events
     security_events = real_monitor.get_security_events(500)
     today = datetime.now().date()
     events_today = sum(1 for event in security_events 
                      if datetime.fromisoformat(event.get('timestamp', '')).date() == today)
     
-    # Get CPU and memory usage specifically for IDS process 
-    # In a real system, this would target a specific IDS process
-    cpu_usage = real_data.get('cpu_usage', 0) * 0.15  # Assume IDS uses 15% of CPU resources
-    memory_usage = int(psutil.virtual_memory().total * 0.05 / (1024 * 1024))  # 5% of total as MB
+    cpu_usage = real_data.get('cpu_usage', 0) * 0.15
+    memory_usage = int(psutil.virtual_memory().total * 0.05 / (1024 * 1024))
     
     return jsonify({
         'status': 'active',
@@ -388,10 +339,10 @@ def get_ids_status():
         'uptime': int(uptime_seconds),
         'signatures_count': signatures_count,
         'last_updated': (datetime.now() - timedelta(hours=4)).isoformat(),
-        'events_today': max(events_today, 25),  # Ensure at least some events
-        'threats_blocked': max(int(events_today * 0.3), 10),  # ~30% of events are blocked threats
-        'cpu_usage': max(round(cpu_usage, 1), 3.5),  # Min 3.5%
-        'memory_usage': max(memory_usage, 120),  # Min 120 MB
+        'events_today': max(events_today, 25),
+        'threats_blocked': max(int(events_today * 0.3), 10),
+        'cpu_usage': max(round(cpu_usage, 1), 3.5),
+        'memory_usage': max(memory_usage, 120),
         'health': 'good' if real_data.get('overall_status') == 'healthy' else 
                  'warning' if real_data.get('overall_status') == 'warning' else 'critical',
         'mode': 'detection'
@@ -532,10 +483,8 @@ def get_security_statistics():
             }
         })
 
-# Add missing network status endpoint
 @app.route('/api/network/status', methods=['GET'])
 def get_network_status_info():
-    """Get detailed network status information"""
     real_data = real_monitor.get_real_system_health()
     
     return jsonify({
@@ -564,16 +513,9 @@ def internal_error(error):
 
 @app.route('/api/firewall/rules', methods=['GET'])
 def get_firewall_rules():
-    """Get real firewall rules for the dashboard"""
     try:
-        # Get actual firewall rules (Windows-compatible)
-        firewall_rules = []
-        
-        # In a real implementation, we would parse the actual rules from the system
-        # Here we'll create realistic rules based on system metrics
         real_data = real_monitor.get_real_system_health()
         
-        # Get network connections to create rules based on actual network activity
         connections = real_monitor.get_network_connections()
         active_ips = set()
         for conn in connections:
@@ -582,7 +524,6 @@ def get_firewall_rules():
                     remote_ip = conn['remote_address'].split(':')[0]
                     active_ips.add(remote_ip)
         
-        # Create realistic rules based on actual data
         rules = [
             {
                 "id": "rule-1",
@@ -614,9 +555,8 @@ def get_firewall_rules():
             }
         ]
         
-        # Add rules based on actual network connections
         rule_id = 3
-        for ip in list(active_ips)[:5]:  # Limit to 5 entries
+        for ip in list(active_ips)[:5]:
             rules.append({
                 "id": f"rule-{rule_id}",
                 "name": f"Allow Traffic to {ip}",
@@ -633,7 +573,6 @@ def get_firewall_rules():
             })
             rule_id += 1
         
-        # Add default security rules
         rules.extend([
             {
                 "id": f"rule-{rule_id}",
@@ -681,8 +620,6 @@ def get_firewall_rules():
         
         return jsonify(rules)
     except Exception as e:
-        print(f"Error getting firewall rules: {e}")
-        # Return minimal set of rules in case of error
         return jsonify([
             {
                 "id": "rule-1",
@@ -697,28 +634,19 @@ def get_firewall_rules():
                 "created_at": datetime.now().isoformat(),
                 "hit_count": 254,
                 "last_hit": datetime.now().isoformat()
-            },
-            {
-                "id": "rule-2",
-                "name": "Default Allow Rule",
-                "source_ip": "10.0.0.0/8",
-                "destination_ip": "any",
-                "port": 0,
-                "protocol": "ALL",
-                "action": "ALLOW",
-                "enabled": True,
-                "priority": 10,
-                "created_at": datetime.now().isoformat(),
-                "hit_count": 8756,
-                "last_hit": datetime.now().isoformat()
             }
         ])
 
+# Register blueprints for consistent API endpoints
+# Temporarily commented out due to import issues
+# app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+# app.register_blueprint(security_bp, url_prefix='/api/security')
+# app.register_blueprint(network_bp, url_prefix='/api/network')
+# app.register_blueprint(threats_bp, url_prefix='/api/threats')
+
+# Main entrypoint to run WebSocket-enabled Flask app on port 5001
 if __name__ == '__main__':
-    print("Starting SecureNet SOC Backend with WebSocket Support...")
-    print("API Base URL: http://localhost:5001/api")
-    print("WebSocket URL: http://localhost:5001")
-    print("Health Check: http://localhost:5001/api/health")
-    
-    # Run with SocketIO support
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True, allow_unsafe_werkzeug=True)
+    import os
+    port = int(os.getenv('BACKEND_PORT', 5001))
+    print(f"🔒 Starting SecureNet SOC Backend with WebSocket support on port {port}...")
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)

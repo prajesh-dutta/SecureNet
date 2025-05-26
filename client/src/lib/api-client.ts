@@ -4,7 +4,7 @@
 import { io, Socket } from 'socket.io-client';
 
 // Configuration
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/?$/, '') || 'http://localhost:5001/api';
 const WEBSOCKET_URL = 'http://localhost:5001';
 
 // Types for API responses
@@ -176,6 +176,11 @@ class APIClient {
   async getSystemMetrics(): Promise<SystemMetrics> {
     return this.get('/dashboard/metrics');
   }
+  
+  async getSystemStatus(): Promise<any> {
+    return this.get('/system/status');
+  }
+
   async getNetworkTrafficData(): Promise<any[]> {
     const response = await this.get('/dashboard/traffic');
     
@@ -386,7 +391,7 @@ class APIClient {
     const config: RequestInit = {
       method,
       headers,
-      credentials: 'include',
+      // credentials: 'include',  // removed to avoid CORS credential issues
     };
 
     if (data) {

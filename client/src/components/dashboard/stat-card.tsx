@@ -1,54 +1,68 @@
-import { ReactNode } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  change?: string | number;
+  change?: string;
   changeType?: 'positive' | 'negative' | 'neutral';
+  icon?: React.ReactNode;
+  description?: string;
   subtitle?: string;
-  icon: ReactNode;
-  iconColor: 'primary' | 'secondary' | 'tertiary' | 'danger';
+  iconColor?: string;
 }
 
-export default function StatCard({
-  title,
-  value,
-  change,
-  changeType = 'neutral',
+export function StatCard({ 
+  title, 
+  value, 
+  change, 
+  changeType = 'neutral', 
+  icon, 
+  description,
   subtitle,
-  icon,
-  iconColor,
+  iconColor 
 }: StatCardProps) {
-  const colorMap = {
-    primary: 'bg-accent-primary/20 text-accent-primary',
-    secondary: 'bg-accent-secondary/20 text-accent-secondary',
-    tertiary: 'bg-accent-tertiary/20 text-accent-tertiary',
-    danger: 'bg-accent-danger/20 text-accent-danger',
+  const getChangeColor = () => {
+    switch (changeType) {
+      case 'positive':
+        return 'text-green-600';
+      case 'negative':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
+    }
   };
-  
-  const changeColorMap = {
-    positive: 'text-accent-secondary',
-    negative: 'text-accent-danger',
-    neutral: 'text-accent-primary',
-  };
-  
+
   return (
-    <div className="glass-effect rounded-lg p-4 flex items-center justify-between">
-      <div>
-        <p className="text-sm text-text-secondary">{title}</p>
-        <div className="flex items-end">
-          <h3 className="text-2xl font-semibold font-inter">{value}</h3>
-          {change && (
-            <span className={`ml-2 text-xs font-medium ${changeColorMap[changeType]}`}>
-              {change}
-            </span>
-          )}
-        </div>
-        {subtitle && <p className="text-xs text-text-secondary mt-1">{subtitle}</p>}
-      </div>
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorMap[iconColor]}`}>
-        {icon}
-      </div>
-    </div>
+    <Card>      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon && (
+          <div 
+            className="h-4 w-4 text-muted-foreground" 
+            style={iconColor ? { color: iconColor } : {}}
+          >
+            {icon}
+          </div>
+        )}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {subtitle}
+          </p>
+        )}
+        {change && (
+          <p className={`text-xs ${getChangeColor()}`}>
+            {change}
+          </p>
+        )}
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {description}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

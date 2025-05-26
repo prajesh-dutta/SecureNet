@@ -19,6 +19,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiClient } from '@/lib/api-client';
+import { formatBytes, formatBytesToMbps } from '@/utils/format';
 
 export default function NetworkTrafficChart() {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -79,7 +80,7 @@ export default function NetworkTrafficChart() {
                 style={{ backgroundColor: entry.color }}
               />
               <p className="text-xs text-text-secondary">
-                {`${entry.name}: ${entry.value} Mbps`}
+                {`${entry.name}: ${entry.value !== undefined ? formatBytesToMbps(entry.value) : '0 Mbps'}`}
               </p>
             </div>
           ))}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Alert, AlertDescription } from '../ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '../ui/progress';
 import { 
   AlertTriangle, 
@@ -22,13 +22,10 @@ import {
   apiClient, 
   setupRealtimeHandlers, 
   requestRealtimeUpdates, 
-  analyzeThreatIndicator,
-  type ThreatAlert,
-  type NetworkStatus,
-  type VulnerabilityData,
-  type IncidentData,
-  type ThreatIntelligenceResult
+  analyzeThreatIndicator
 } from '@/lib/api-client';
+import { io, type Socket } from 'socket.io-client';
+import { formatBytes, formatBytesToMbps } from '@/utils/format';
 
 interface ThreatAlert {
   id: string;
@@ -264,13 +261,12 @@ export function RealtimeSOCDashboard() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Bandwidth</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
+              </CardHeader>              <CardContent>
                 <div className="text-2xl font-bold">
-                  {networkStatus?.bandwidth_usage.total || 0} Mbps
+                  {networkStatus ? formatBytesToMbps(networkStatus.bandwidth_usage.total) : '0 Mbps'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  ↑ {networkStatus?.bandwidth_usage.outbound || 0} ↓ {networkStatus?.bandwidth_usage.inbound || 0}
+                  ↑ {networkStatus ? formatBytes(networkStatus.bandwidth_usage.outbound) : '0 B'} ↓ {networkStatus ? formatBytes(networkStatus.bandwidth_usage.inbound) : '0 B'}
                 </p>
               </CardContent>
             </Card>
@@ -386,14 +382,13 @@ export function RealtimeSOCDashboard() {
                       value={(networkStatus.devices_online / networkStatus.total_devices) * 100} 
                       className="mt-1"
                     />
-                  </div>
-                  <div>
+                  </div>                  <div>
                     <div className="flex justify-between text-sm">
                       <span>Bandwidth Usage</span>
-                      <span>{networkStatus.bandwidth_usage.total} Mbps</span>
+                      <span>{formatBytesToMbps(networkStatus.bandwidth_usage.total)}</span>
                     </div>
                     <Progress 
-                      value={Math.min((networkStatus.bandwidth_usage.total / 1000) * 100, 100)} 
+                      value={Math.min((networkStatus.bandwidth_usage.total / (1024 * 1024 * 1024)) * 100, 100)} 
                       className="mt-1"
                     />
                   </div>
@@ -525,7 +520,6 @@ export function RealtimeSOCDashboard() {
             </Card>
           )}
         </TabsContent>
-      </Tabs>
-    </div>
+      </Tabs>    </div>
   );
 }
