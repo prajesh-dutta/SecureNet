@@ -496,7 +496,8 @@ class IntrusionDetectionSystem:
             })
         
         return packet_data
-      async def analyze_packet(self, packet_data: Dict[str, Any]) -> List[DetectionAlert]:
+
+    async def analyze_packet(self, packet_data: Dict[str, Any]) -> List[DetectionAlert]:
         """Analyze packet using all detection engines"""
         self.packets_processed += 1
         alerts = []
@@ -814,9 +815,10 @@ class IntrusionDetectionSystem:
         except Exception as e:
             self.logger.error(f"Failed to get detection rules: {e}")
             return []
-      def add_detection_rule(self, name: str, pattern: str, action: str, 
-                          severity: str = 'MEDIUM', description: str = '', 
-                          enabled: bool = True, **kwargs) -> str:
+
+    def add_detection_rule(self, name: str, pattern: str, action: str,
+                           severity: str = 'MEDIUM', description: str = '',
+                           enabled: bool = True, **kwargs) -> str:
         """Add a new detection rule"""
         try:
             rule_id = str(uuid.uuid4())
